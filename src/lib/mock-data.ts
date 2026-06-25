@@ -95,6 +95,17 @@ function buildCapacity(
   };
 }
 
+// Status progression used to synthesize a believable history timeline.
+// Declared before MOCK_ORDERS because buildOrder() reads it during the
+// array's initialization (avoids a temporal-dead-zone ReferenceError).
+const STATUS_FLOW: OrderStatus[] = [
+  'pending',
+  'confirmed',
+  'in_progress',
+  'completed',
+  'shipped',
+];
+
 // A spread of mock orders across every status.
 export const MOCK_ORDERS: Order[] = [
   buildOrder({
@@ -200,15 +211,6 @@ interface BuildOrderArgs {
   items?: Array<{ label: string; description?: string; isComplete: boolean }>;
   daysAgo: number;
 }
-
-// Status progression used to synthesize a believable history timeline.
-const STATUS_FLOW: OrderStatus[] = [
-  'pending',
-  'confirmed',
-  'in_progress',
-  'completed',
-  'shipped',
-];
 
 function buildOrder(args: BuildOrderArgs): Order {
   const id = `order-${args.n}`;

@@ -12,5 +12,8 @@ export default defineConfig({
   },
   server: {
     port: 5173,
+    // Bind on all interfaces (IPv4 + IPv6) so both localhost and
+    // 127.0.0.1 work — avoids the IPv6-only "blank page" gotcha.
+    host: true,
   },
 });
