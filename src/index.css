@@ -1,0 +1,32 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    -webkit-font-smoothing: antialiased;
+  }
+
+  body {
+    @apply bg-cream font-body text-charcoal;
+    /* Subtle linen-like texture — soft, handmade feel */
+    background-image: radial-gradient(
+      rgba(107, 127, 163, 0.04) 1px,
+      transparent 1px
+    );
+    background-size: 16px 16px;
+  }
+
+  h1,
+  h2,
+  h3 {
+    @apply font-display text-charcoal;
+  }
+}
+
+@layer components {
+  /* Shared placeholder card look — refined in Phase 1 UI work */
+  .lis-card {
+    @apply rounded-2xl bg-white/70 p-6 shadow-warm backdrop-blur-sm;
+  }
+}
