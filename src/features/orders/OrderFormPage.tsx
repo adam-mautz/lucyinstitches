@@ -1,5 +1,9 @@
 import { useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
+import { supabase } from '@/lib/supabase';
+import { useToastStore } from '@/store/toast-store';
+import { currentMonthIso } from '@/lib/utils';
 import { PageContainer } from '@/components/PageContainer';
 import { Card } from '@/components/Card';
 import { Button } from '@/components/Button';
@@ -41,10 +45,13 @@ const EMPTY: FormState = {
 export function OrderFormPage() {
   const [params] = useSearchParams();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const push = useToastStore((s) => s.push);
   const { data: capacity } = useCapacity();
 
   const preselect = params.get('product') as ProductType | null;
   const [step, setStep] = useState(0);
+  const [submitting, setSubmitting] = useState(false);
   const [form, setForm] = useState<FormState>({
     ...EMPTY,
     productType: preselect,
@@ -74,19 +81,60 @@ export function OrderFormPage() {
     return true;
   })();
 
-  const handleSubmit = () => {
-    // Phase 1: no backend. Synthesize an order number + tracking token and
-    // hand off to the confirmation page via router state.
-    const orderNumber = 'LIS-0043';
-    const token = 'tok-43-preview';
-    navigate('/order/confirmation', {
-      state: {
-        orderNumber,
-        token,
-        customerName: form.customerName,
-        productType: form.productType,
-      },
-    });
+  const handleSubmit = async () => {
+    if (!form.productType || submitting) return;
+    setSubmitting(true);
+    try {
+      // Upload the inspiration image first (private bucket), if provided.
+      let inspirationPath: string | null = null;
+      if (form.inspiration) {
+        const ext = form.inspiration.name.split('.').pop() ?? 'jpg';
+        const path = `${crypto.randomUUID()}.${ext}`;
+        const { error: upErr } = await supabase.storage
+          .from('inspiration')
+          .upload(path, form.inspiration);
+        if (upErr) throw upErr;
+        inspirationPath = path;
+      }
+
+      // Create the order via the SECURITY DEFINER RPC (forces status,
+      // checks capacity server-side, returns order # + tracking token).
+      const { data, error } = await supabase.rpc('create_order', {
+        p_product_type: form.productType,
+        p_customer_name: form.customerName,
+        p_customer_email: form.customerEmail,
+        p_customer_phone: form.customerPhone,
+        p_embroidery_request: form.embroideryRequest,
+        p_month: currentMonthIso(),
+        p_notes: form.notes || null,
+        p_inspiration_image_path: inspirationPath,
+      });
+      if (error) throw error;
+
+      const result = data as {
+        orderNumber: string;
+        uniqueTrackingToken: string;
+      };
+
+      // Availability changed — refetch it next time it's shown.
+      queryClient.invalidateQueries({ queryKey: ['capacity'] });
+
+      navigate('/order/confirmation', {
+        state: {
+          orderNumber: result.orderNumber,
+          token: result.uniqueTrackingToken,
+          customerName: form.customerName,
+          productType: form.productType,
+        },
+      });
+    } catch (err) {
+      const message =
+        err instanceof Error
+          ? err.message
+          : 'Something went wrong placing your order. Please try again.';
+      push(message, 'error');
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -181,7 +229,9 @@ export function OrderFormPage() {
               Continue
             </Button>
           ) : (
-            <Button onClick={handleSubmit}>Submit Order</Button>
+            <Button onClick={handleSubmit} disabled={submitting}>
+              {submitting ? 'Submitting…' : 'Submit Order'}
+            </Button>
           )}
         </div>
       </Card>

@@ -8,7 +8,17 @@ import type { MonthlyCapacity } from '@/types';
 // Availability grid by product type. Reads capacity via React Query
 // (mock data in Phase 1).
 export function AvailabilityDisplay() {
-  const { data: capacity, isLoading } = useCapacity();
+  const { data: capacity, isLoading, isError } = useCapacity();
+
+  if (isError) {
+    return (
+      <Card className="text-center">
+        <p className="font-body text-charcoal-light">
+          We couldn’t load availability right now. Please refresh in a moment.
+        </p>
+      </Card>
+    );
+  }
 
   if (isLoading || !capacity) {
     return (

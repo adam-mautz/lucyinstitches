@@ -49,3 +49,10 @@ export function formatMonth(iso: string) {
     timeZone: 'UTC',
   });
 }
+
+/** First day of the current month as "YYYY-MM-01" (local time). */
+export function currentMonthIso() {
+  const d = new Date();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  return `${d.getFullYear()}-${month}-01`;
+}
