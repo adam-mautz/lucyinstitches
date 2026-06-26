@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { Card } from '@/components/Card';
 import { StatusBadge } from '@/components/StatusBadge';
+import { BarChart } from '@/components/BarChart';
 import { useOrders } from '@/features/orders/use-orders';
 import { useCapacity } from '@/features/capacity/use-capacity';
 import {
@@ -40,6 +41,53 @@ export function AdminDashboardPage() {
     .slice()
     .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
     .slice(0, 5);
+
+  // Chart aggregations.
+  const charts = useMemo(() => {
+    const all = orders ?? [];
+
+    // Orders + revenue grouped by month (last 6 months present in the data).
+    const byMonth = new Map<string, { count: number; revenue: number }>();
+    for (const o of all) {
+      const ym = o.createdAt.slice(0, 7); // YYYY-MM
+      const entry = byMonth.get(ym) ?? { count: 0, revenue: 0 };
+      entry.count += 1;
+      entry.revenue += o.finalPrice ?? o.quotedPrice ?? 0;
+      byMonth.set(ym, entry);
+    }
+    const months = [...byMonth.keys()].sort().slice(-6);
+    const monthLabel = (ym: string) =>
+      new Date(`${ym}-01T00:00:00Z`).toLocaleDateString('en-US', {
+        month: 'short',
+        timeZone: 'UTC',
+      });
+
+    // Time logged per product type.
+    const byProduct = new Map<string, number>();
+    for (const o of all) {
+      if (o.timeSpentMinutes) {
+        byProduct.set(
+          o.productType,
+          (byProduct.get(o.productType) ?? 0) + o.timeSpentMinutes
+        );
+      }
+    }
+
+    return {
+      ordersByMonth: months.map((m) => ({
+        label: monthLabel(m),
+        value: byMonth.get(m)!.count,
+      })),
+      revenueByMonth: months.map((m) => ({
+        label: monthLabel(m),
+        value: byMonth.get(m)!.revenue,
+      })),
+      timeByProduct: [...byProduct.entries()].map(([type, minutes]) => ({
+        label: PRODUCT_BY_TYPE[type as keyof typeof PRODUCT_BY_TYPE].label,
+        value: minutes,
+      })),
+    };
+  }, [orders]);
 
   return (
     <div className="flex flex-col gap-6">
@@ -163,6 +211,31 @@ export function AdminDashboardPage() {
               );
             })}
           </div>
+        </Card>
+      </div>
+
+      {/* Charts */}
+      <div className="grid gap-6 lg:grid-cols-3">
+        <Card>
+          <h2 className="mb-4 font-display text-xl">Orders by Month</h2>
+          <BarChart data={charts.ordersByMonth} />
+        </Card>
+        <Card>
+          <h2 className="mb-4 font-display text-xl">Revenue by Month</h2>
+          <BarChart
+            data={charts.revenueByMonth}
+            format={(v) => formatCurrency(v)}
+            barClassName="bg-sage-dark"
+          />
+        </Card>
+        <Card>
+          <h2 className="mb-4 font-display text-xl">Time by Product</h2>
+          <BarChart
+            data={charts.timeByProduct}
+            format={(v) => formatDuration(v)}
+            barClassName="bg-mauve"
+            emptyMessage="No time logged yet."
+          />
         </Card>
       </div>
     </div>

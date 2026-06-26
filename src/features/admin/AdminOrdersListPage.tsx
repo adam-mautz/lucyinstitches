@@ -1,11 +1,13 @@
 import { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { Card } from '@/components/Card';
+import { Button } from '@/components/Button';
 import { StatusBadge } from '@/components/StatusBadge';
 import { Input } from '@/components/form/Input';
 import { useOrders } from '@/features/orders/use-orders';
 import { useOrderFilterStore } from '@/store/order-filter-store';
-import { cn, formatCurrency, formatDate } from '@/lib/utils';
+import { ordersToCsv, downloadCsv } from '@/lib/csv';
+import { cn, currentMonthIso, formatCurrency, formatDate } from '@/lib/utils';
 import {
   ORDER_STATUS_LABELS,
   PRODUCT_TYPE_LABELS,
@@ -42,9 +44,23 @@ export function AdminOrdersListPage() {
       .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
   }, [orders, statusFilter, search]);
 
+  const handleExport = () => {
+    const csv = ordersToCsv(filtered);
+    downloadCsv(`lucy-orders-${currentMonthIso().slice(0, 7)}.csv`, csv);
+  };
+
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="font-display text-3xl">Orders</h1>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h1 className="font-display text-3xl">Orders</h1>
+        <Button
+          variant="secondary"
+          onClick={handleExport}
+          disabled={filtered.length === 0}
+        >
+          Export CSV
+        </Button>
+      </div>
 
       {/* Filters */}
       <div className="flex flex-col gap-4">
