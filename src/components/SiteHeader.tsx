@@ -11,7 +11,13 @@ export function SiteHeader() {
         >
           Lucy in Stitches
         </Link>
-        <nav className="flex items-center gap-6 font-sans text-sm">
+        <nav className="flex items-center gap-4 font-sans text-sm sm:gap-6">
+          <Link
+            to="/inspiration"
+            className="text-charcoal hover:text-slate-blue"
+          >
+            Inspiration
+          </Link>
           <Link to="/order" className="text-charcoal hover:text-slate-blue">
             Place an Order
           </Link>

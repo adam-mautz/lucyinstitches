@@ -3,10 +3,15 @@ import { PageContainer } from '@/components/PageContainer';
 import { Button } from '@/components/Button';
 import { Logo } from '@/components/Logo';
 import { AvailabilityDisplay } from './AvailabilityDisplay';
+import { FeaturedGallery } from '@/features/featured/FeaturedGallery';
+import { useFeaturedWorks } from '@/features/featured/use-featured';
 import { currentMonthIso, formatMonth } from '@/lib/utils';
 
 // Homepage — brand intro, current availability, CTA.
 export function HomePage() {
+  const { data: featured } = useFeaturedWorks();
+  const preview = (featured ?? []).slice(0, 3);
+
   return (
     <PageContainer>
       {/* Hero */}
@@ -41,6 +46,27 @@ export function HomePage() {
         </div>
         <AvailabilityDisplay />
       </section>
+
+      {/* Inspiration preview */}
+      {preview.length > 0 && (
+        <section className="py-8">
+          <div className="mb-6 text-center">
+            <h2 className="font-display text-2xl">Recent Creations</h2>
+            <p className="mt-1 font-body text-charcoal-light">
+              A few favorites from the studio.
+            </p>
+          </div>
+          <FeaturedGallery works={preview} />
+          <div className="mt-6 text-center">
+            <Link
+              to="/inspiration"
+              className="font-sans text-sm font-medium text-slate-blue hover:text-slate-blue-dark"
+            >
+              See more inspiration →
+            </Link>
+          </div>
+        </section>
+      )}
 
       {/* How it works */}
       <section className="py-8">

@@ -6,6 +6,7 @@ const navItems = [
   { to: '/admin', label: 'Dashboard', end: true },
   { to: '/admin/orders', label: 'Orders', end: false },
   { to: '/admin/capacity', label: 'Capacity', end: false },
+  { to: '/admin/featured', label: 'Featured', end: false },
 ];
 
 // Shell for the admin dashboard — sidebar nav + content outlet.

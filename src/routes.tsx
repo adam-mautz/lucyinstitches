@@ -8,6 +8,7 @@ import { OrderFormPage } from '@/features/orders/OrderFormPage';
 import { OrderConfirmationPage } from '@/features/orders/OrderConfirmationPage';
 import { OrderLookupPage } from '@/features/orders/OrderLookupPage';
 import { OrderStatusPage } from '@/features/orders/OrderStatusPage';
+import { InspirationPage } from '@/features/featured/InspirationPage';
 
 // Admin + auth
 import { AdminLoginPage } from '@/features/auth/AdminLoginPage';
@@ -16,6 +17,7 @@ import { AdminLayout } from '@/features/admin/AdminLayout';
 import { AdminDashboardPage } from '@/features/admin/AdminDashboardPage';
 import { AdminOrdersListPage } from '@/features/admin/AdminOrdersListPage';
 import { AdminOrderDetailPage } from '@/features/admin/AdminOrderDetailPage';
+import { AdminFeaturedPage } from '@/features/admin/AdminFeaturedPage';
 import { CapacityManagerPage } from '@/features/capacity/CapacityManagerPage';
 
 export function AppRoutes() {
@@ -28,6 +30,7 @@ export function AppRoutes() {
         <Route path="/order/confirmation" element={<OrderConfirmationPage />} />
         <Route path="/lookup" element={<OrderLookupPage />} />
         <Route path="/track/:token" element={<OrderStatusPage />} />
+        <Route path="/inspiration" element={<InspirationPage />} />
       </Route>
 
       {/* Admin auth (public login) */}
@@ -45,6 +48,7 @@ export function AppRoutes() {
         <Route index element={<AdminDashboardPage />} />
         <Route path="orders" element={<AdminOrdersListPage />} />
         <Route path="orders/:orderId" element={<AdminOrderDetailPage />} />
+        <Route path="featured" element={<AdminFeaturedPage />} />
         <Route path="capacity" element={<CapacityManagerPage />} />
       </Route>
 

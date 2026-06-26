@@ -39,6 +39,33 @@ export type Database = {
   }
   public: {
     Tables: {
+      featured_works: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          image_path: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_path: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_path?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       monthly_capacity: {
         Row: {
           closed_message: string | null
