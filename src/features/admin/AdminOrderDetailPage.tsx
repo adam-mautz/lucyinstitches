@@ -16,6 +16,7 @@ import {
   useUpdateOrder,
 } from '@/features/orders/use-order-mutations';
 import { supabase } from '@/lib/supabase';
+import { notifyStatusChange } from '@/lib/notify';
 import { useToastStore } from '@/store/toast-store';
 import { cn, formatDate, formatDuration } from '@/lib/utils';
 import {
@@ -100,8 +101,11 @@ function OrderDetail({ order }: { order: Order }) {
     updateOrder.mutate(
       { id: order.id, patch: { status } },
       {
-        onSuccess: () =>
-          push(`Status set to ${ORDER_STATUS_LABELS[status]}`, 'success'),
+        onSuccess: () => {
+          push(`Status set to ${ORDER_STATUS_LABELS[status]}`, 'success');
+          // Email the customer about the change (best-effort, admin-only API).
+          if (status !== order.status) void notifyStatusChange(order.id);
+        },
         onError,
       }
     );

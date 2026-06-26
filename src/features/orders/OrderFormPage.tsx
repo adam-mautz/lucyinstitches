@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { useToastStore } from '@/store/toast-store';
+import { notifyNewOrder } from '@/lib/notify';
 import { currentMonthIso } from '@/lib/utils';
 import { PageContainer } from '@/components/PageContainer';
 import { Card } from '@/components/Card';
@@ -118,6 +119,9 @@ export function OrderFormPage() {
 
       // Availability changed — refetch it next time it's shown.
       queryClient.invalidateQueries({ queryKey: ['capacity'] });
+
+      // Best-effort owner notification (won't block confirmation).
+      void notifyNewOrder(result.uniqueTrackingToken);
 
       navigate('/order/confirmation', {
         state: {
