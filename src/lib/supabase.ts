@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import type { Database } from '@/types/database';
 
 // Client-safe Supabase instance (anon key only). Subject to Row Level
 // Security policies. The service key must NEVER be used here — it lives
@@ -16,4 +17,7 @@ if (!supabaseUrl || !supabaseAnonKey) {
   );
 }
 
-export const supabase = createClient(supabaseUrl ?? '', supabaseAnonKey ?? '');
+export const supabase = createClient<Database>(
+  supabaseUrl ?? '',
+  supabaseAnonKey ?? ''
+);

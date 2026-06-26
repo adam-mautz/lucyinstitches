@@ -106,8 +106,8 @@ export function OrderFormPage() {
         p_customer_phone: form.customerPhone,
         p_embroidery_request: form.embroideryRequest,
         p_month: currentMonthIso(),
-        p_notes: form.notes || null,
-        p_inspiration_image_path: inspirationPath,
+        p_notes: form.notes || undefined,
+        p_inspiration_image_path: inspirationPath ?? undefined,
       });
       if (error) throw error;
 
