@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { Card } from '@/components/Card';
 import { cn } from '@/lib/utils';
-import { PRODUCT_BY_TYPE } from '@/lib/mock-data';
+import { PRODUCT_BY_TYPE } from '@/lib/products';
 import { useCapacity } from './use-capacity';
 import type { MonthlyCapacity } from '@/types';
 

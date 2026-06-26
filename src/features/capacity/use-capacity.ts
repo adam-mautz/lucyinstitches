@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { currentMonthIso } from '@/lib/utils';
-import { PRODUCTS } from '@/lib/mock-data';
+import { PRODUCTS } from '@/lib/products';
 import type { MonthlyCapacity, ProductType } from '@/types';
 
 // Display order for product types (matches PRODUCTS config).

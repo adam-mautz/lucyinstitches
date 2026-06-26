@@ -9,17 +9,19 @@ import {
   formatDuration,
   formatMonth,
   formatDate,
+  currentMonthIso,
 } from '@/lib/utils';
-import { CURRENT_MONTH, PRODUCT_BY_TYPE } from '@/lib/mock-data';
+import { PRODUCT_BY_TYPE } from '@/lib/products';
 import { PRODUCT_TYPE_LABELS } from '@/types';
 
 export function AdminDashboardPage() {
   const { data: orders } = useOrders();
   const { data: capacity } = useCapacity();
 
+  const month = currentMonthIso();
   const stats = useMemo(() => {
     const all = orders ?? [];
-    const thisMonth = all.filter((o) => o.month === CURRENT_MONTH);
+    const thisMonth = all.filter((o) => o.month === month);
     const revenue = thisMonth.reduce(
       (sum, o) => sum + (o.finalPrice ?? o.quotedPrice ?? 0),
       0
@@ -31,7 +33,7 @@ export function AdminDashboardPage() {
       revenue,
       minutes,
     };
-  }, [orders]);
+  }, [orders, month]);
 
   const pending = (orders ?? []).filter((o) => o.status === 'pending');
   const recent = (orders ?? [])
@@ -44,7 +46,7 @@ export function AdminDashboardPage() {
       <div>
         <h1 className="font-display text-3xl">Dashboard</h1>
         <p className="font-body text-charcoal-light">
-          {formatMonth(CURRENT_MONTH)}
+          {formatMonth(month)}
         </p>
       </div>
 

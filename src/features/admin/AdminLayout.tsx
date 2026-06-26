@@ -1,5 +1,5 @@
 import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom';
-import { useAuthStore } from '@/store/auth-store';
+import { supabase } from '@/lib/supabase';
 import { cn } from '@/lib/utils';
 
 const navItems = [
@@ -10,11 +10,10 @@ const navItems = [
 
 // Shell for the admin dashboard — sidebar nav + content outlet.
 export function AdminLayout() {
-  const signOut = useAuthStore((s) => s.signOut);
   const navigate = useNavigate();
 
-  const handleSignOut = () => {
-    signOut();
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
     navigate('/admin/login');
   };
 

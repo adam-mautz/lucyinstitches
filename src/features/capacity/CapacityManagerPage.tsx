@@ -3,13 +3,15 @@ import { Card } from '@/components/Card';
 import { Button } from '@/components/Button';
 import { Input } from '@/components/form/Input';
 import { useCapacity } from './use-capacity';
+import { useUpdateCapacity } from '@/features/orders/use-order-mutations';
 import { useToastStore } from '@/store/toast-store';
-import { cn, formatMonth } from '@/lib/utils';
-import { CURRENT_MONTH, PRODUCT_BY_TYPE } from '@/lib/mock-data';
+import { cn, currentMonthIso, formatMonth } from '@/lib/utils';
+import { PRODUCT_BY_TYPE } from '@/lib/products';
 import type { MonthlyCapacity } from '@/types';
 
 export function CapacityManagerPage() {
   const { data: capacity, isLoading } = useCapacity();
+  const updateCapacity = useUpdateCapacity();
   const push = useToastStore((s) => s.push);
   const [rows, setRows] = useState<MonthlyCapacity[]>([]);
 
@@ -35,7 +37,29 @@ export function CapacityManagerPage() {
     );
   };
 
-  const save = () => push('Capacity saved (preview — not persisted)', 'success');
+  const save = async () => {
+    try {
+      // Persist only rows whose total changed; never below what's booked.
+      const changed = rows.filter((r) => {
+        const original = capacity?.find((c) => c.id === r.id);
+        return original && original.totalSlots !== r.totalSlots;
+      });
+      await Promise.all(
+        changed.map((r) =>
+          updateCapacity.mutateAsync({
+            id: r.id,
+            totalSlots: Math.max(r.totalSlots, r.usedSlots),
+          })
+        )
+      );
+      push(
+        changed.length ? 'Capacity saved' : 'No changes to save',
+        'success'
+      );
+    } catch (err) {
+      push(err instanceof Error ? err.message : 'Could not save', 'error');
+    }
+  };
 
   return (
     <div className="flex flex-col gap-6">
@@ -43,10 +67,12 @@ export function CapacityManagerPage() {
         <div>
           <h1 className="font-display text-3xl">Capacity</h1>
           <p className="font-body text-charcoal-light">
-            Slots for {formatMonth(CURRENT_MONTH)}
+            Slots for {formatMonth(currentMonthIso())}
           </p>
         </div>
-        <Button onClick={save}>Save Changes</Button>
+        <Button onClick={save} disabled={updateCapacity.isPending}>
+          {updateCapacity.isPending ? 'Saving…' : 'Save Changes'}
+        </Button>
       </div>
 
       <Card>

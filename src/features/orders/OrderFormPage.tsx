@@ -13,7 +13,7 @@ import { Textarea } from '@/components/form/Textarea';
 import { StepIndicator } from '@/components/form/StepIndicator';
 import { ImageUploadField } from './ImageUploadField';
 import { cn } from '@/lib/utils';
-import { PRODUCTS } from '@/lib/mock-data';
+import { PRODUCTS } from '@/lib/products';
 import { useCapacity } from '@/features/capacity/use-capacity';
 import {
   PRODUCT_TYPE_LABELS,

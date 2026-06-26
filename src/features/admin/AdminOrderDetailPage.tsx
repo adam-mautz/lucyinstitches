@@ -9,17 +9,31 @@ import { Select } from '@/components/form/Select';
 import { Textarea } from '@/components/form/Textarea';
 import { OrderTimeline } from '@/features/orders/OrderTimeline';
 import { useOrderById } from '@/features/orders/use-orders';
+import {
+  useAddItem,
+  useDeleteItem,
+  useUpdateItem,
+  useUpdateOrder,
+} from '@/features/orders/use-order-mutations';
+import { supabase } from '@/lib/supabase';
 import { useToastStore } from '@/store/toast-store';
 import { cn, formatDate, formatDuration } from '@/lib/utils';
 import {
   ORDER_STATUS_LABELS,
   PRODUCT_TYPE_LABELS,
   type Order,
-  type OrderItem,
   type OrderStatus,
 } from '@/types';
 
 const STATUSES = Object.keys(ORDER_STATUS_LABELS) as OrderStatus[];
+
+// numeric input -> number | null (empty clears the column)
+const toNum = (s: string): number | null => {
+  const t = s.trim();
+  if (t === '') return null;
+  const n = Number(t);
+  return Number.isNaN(n) ? null : n;
+};
 
 export function AdminOrderDetailPage() {
   const { orderId } = useParams<{ orderId: string }>();
@@ -42,12 +56,16 @@ export function AdminOrderDetailPage() {
     );
   }
 
-  return <OrderDetail order={order} />;
+  // key on id so editable inputs re-init when navigating between orders.
+  return <OrderDetail key={order.id} order={order} />;
 }
 
-// Separate component so editable state can initialize from the loaded order.
 function OrderDetail({ order }: { order: Order }) {
   const push = useToastStore((s) => s.push);
+  const updateOrder = useUpdateOrder();
+  const addItem = useAddItem();
+  const updateItem = useUpdateItem();
+  const deleteItem = useDeleteItem();
 
   const [status, setStatus] = useState<OrderStatus>(order.status);
   const [quoted, setQuoted] = useState(order.quotedPrice?.toString() ?? '');
@@ -55,47 +73,87 @@ function OrderDetail({ order }: { order: Order }) {
   const [minutes, setMinutes] = useState(
     order.timeSpentMinutes?.toString() ?? ''
   );
-  const [internalNote, setInternalNote] = useState('');
-  const [items, setItems] = useState<OrderItem[]>(order.items);
+  const [internalNote, setInternalNote] = useState(order.internalNotes ?? '');
   const [newLabel, setNewLabel] = useState('');
   const [newDesc, setNewDesc] = useState('');
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
 
-  // Keep local state in sync if the underlying order changes (e.g. nav).
+  // Resolve a short-lived signed URL for the private inspiration image.
   useEffect(() => {
-    setStatus(order.status);
-    setItems(order.items);
-  }, [order]);
+    if (!order.inspirationImagePath) return;
+    let active = true;
+    supabase.storage
+      .from('inspiration')
+      .createSignedUrl(order.inspirationImagePath, 3600)
+      .then(({ data }) => {
+        if (active) setImageUrl(data?.signedUrl ?? null);
+      });
+    return () => {
+      active = false;
+    };
+  }, [order.inspirationImagePath]);
 
-  const saved = (msg: string) => push(`${msg} (preview — not persisted)`, 'success');
+  const onError = (err: unknown) =>
+    push(err instanceof Error ? err.message : 'Something went wrong', 'error');
 
-  const toggleItem = (id: string) => {
-    setItems((prev) =>
-      prev.map((it) =>
-        it.id === id ? { ...it, isComplete: !it.isComplete } : it
-      )
+  const saveStatus = () =>
+    updateOrder.mutate(
+      { id: order.id, patch: { status } },
+      {
+        onSuccess: () =>
+          push(`Status set to ${ORDER_STATUS_LABELS[status]}`, 'success'),
+        onError,
+      }
+    );
+
+  const savePricing = () =>
+    updateOrder.mutate(
+      {
+        id: order.id,
+        patch: { quoted_price: toNum(quoted), final_price: toNum(final) },
+      },
+      { onSuccess: () => push('Pricing saved', 'success'), onError }
+    );
+
+  const saveTime = () =>
+    updateOrder.mutate(
+      { id: order.id, patch: { time_spent_minutes: toNum(minutes) } },
+      { onSuccess: () => push('Time logged', 'success'), onError }
+    );
+
+  const saveNote = () =>
+    updateOrder.mutate(
+      { id: order.id, patch: { internal_notes: internalNote.trim() || null } },
+      { onSuccess: () => push('Note saved', 'success'), onError }
+    );
+
+  const handleAddItem = () => {
+    if (!newLabel.trim()) return;
+    addItem.mutate(
+      {
+        order_id: order.id,
+        label: newLabel.trim(),
+        description: newDesc.trim() || null,
+      },
+      {
+        onSuccess: () => {
+          setNewLabel('');
+          setNewDesc('');
+          push('Item added', 'success');
+        },
+        onError,
+      }
     );
   };
 
-  const addItem = () => {
-    if (!newLabel.trim()) return;
-    setItems((prev) => [
-      ...prev,
-      {
-        id: `tmp-${prev.length + 1}`,
-        orderId: order.id,
-        label: newLabel.trim(),
-        description: newDesc.trim() || undefined,
-        isComplete: false,
-      },
-    ]);
-    setNewLabel('');
-    setNewDesc('');
-    saved('Item added');
-  };
+  const toggleItem = (id: string, isComplete: boolean) =>
+    updateItem.mutate(
+      { id, orderId: order.id, patch: { is_complete: !isComplete } },
+      { onError }
+    );
 
-  const removeItem = (id: string) => {
-    setItems((prev) => prev.filter((it) => it.id !== id));
-  };
+  const removeItem = (id: string) =>
+    deleteItem.mutate({ id, orderId: order.id }, { onError });
 
   return (
     <div className="flex flex-col gap-6">
@@ -117,7 +175,7 @@ function OrderDetail({ order }: { order: Order }) {
               {formatDate(order.createdAt)}
             </p>
           </div>
-          <StatusBadge status={status} />
+          <StatusBadge status={order.status} />
         </div>
       </div>
 
@@ -141,25 +199,43 @@ function OrderDetail({ order }: { order: Order }) {
                 Customer note: {order.notes}
               </p>
             )}
+            {order.inspirationImagePath && (
+              <div className="mt-4">
+                <h3 className="mb-2 font-sans text-xs uppercase tracking-wide text-charcoal-light">
+                  Inspiration
+                </h3>
+                {imageUrl ? (
+                  <a href={imageUrl} target="_blank" rel="noreferrer">
+                    <img
+                      src={imageUrl}
+                      alt="Customer inspiration"
+                      className="max-h-64 rounded-xl border border-cream-dark object-contain"
+                    />
+                  </a>
+                ) : (
+                  <div className="h-32 w-32 animate-pulse rounded-xl bg-white/50" />
+                )}
+              </div>
+            )}
           </Card>
 
           {/* Item tagging */}
           <Card>
             <h2 className="mb-3 font-display text-xl">Items</h2>
             <div className="flex flex-col gap-2">
-              {items.length === 0 && (
+              {order.items.length === 0 && (
                 <p className="font-body text-sm text-charcoal-light">
                   No items tagged yet — add tags like H1, H2 for multi-item
                   orders.
                 </p>
               )}
-              {items.map((it) => (
+              {order.items.map((it) => (
                 <div
                   key={it.id}
                   className="flex items-center gap-3 rounded-lg border border-cream-dark bg-white/60 px-3 py-2"
                 >
                   <button
-                    onClick={() => toggleItem(it.id)}
+                    onClick={() => toggleItem(it.id, it.isComplete)}
                     className={cn(
                       'flex h-6 w-6 items-center justify-center rounded-full text-xs',
                       it.isComplete
@@ -201,7 +277,12 @@ function OrderDetail({ order }: { order: Order }) {
                 placeholder="Description (optional)"
                 className="flex-1"
               />
-              <Button variant="secondary" onClick={addItem} className="shrink-0">
+              <Button
+                variant="secondary"
+                onClick={handleAddItem}
+                disabled={addItem.isPending}
+                className="shrink-0"
+              >
                 Add
               </Button>
             </div>
@@ -221,8 +302,8 @@ function OrderDetail({ order }: { order: Order }) {
             <div className="mt-3 flex justify-end">
               <Button
                 variant="secondary"
-                onClick={() => saved('Note saved')}
-                disabled={!internalNote.trim()}
+                onClick={saveNote}
+                disabled={updateOrder.isPending}
               >
                 Save Note
               </Button>
@@ -248,9 +329,8 @@ function OrderDetail({ order }: { order: Order }) {
             </Field>
             <Button
               className="mt-3 w-full"
-              onClick={() =>
-                saved(`Status set to ${ORDER_STATUS_LABELS[status]}`)
-              }
+              onClick={saveStatus}
+              disabled={updateOrder.isPending}
             >
               Save Status
             </Button>
@@ -279,7 +359,8 @@ function OrderDetail({ order }: { order: Order }) {
               </Field>
               <Button
                 variant="secondary"
-                onClick={() => saved('Pricing saved')}
+                onClick={savePricing}
+                disabled={updateOrder.isPending}
               >
                 Save Pricing
               </Button>
@@ -307,7 +388,8 @@ function OrderDetail({ order }: { order: Order }) {
             <Button
               variant="secondary"
               className="mt-3 w-full"
-              onClick={() => saved('Time logged')}
+              onClick={saveTime}
+              disabled={updateOrder.isPending}
             >
               Log Time
             </Button>

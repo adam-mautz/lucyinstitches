@@ -3,8 +3,7 @@ import { PageContainer } from '@/components/PageContainer';
 import { Button } from '@/components/Button';
 import { Logo } from '@/components/Logo';
 import { AvailabilityDisplay } from './AvailabilityDisplay';
-import { formatMonth } from '@/lib/utils';
-import { CURRENT_MONTH } from '@/lib/mock-data';
+import { currentMonthIso, formatMonth } from '@/lib/utils';
 
 // Homepage — brand intro, current availability, CTA.
 export function HomePage() {
@@ -36,7 +35,7 @@ export function HomePage() {
         <div className="mb-6 text-center">
           <h2 className="font-display text-2xl">This Month’s Availability</h2>
           <p className="mt-1 font-body text-charcoal-light">
-            Slots for {formatMonth(CURRENT_MONTH)} — once a category fills, it
+            Slots for {formatMonth(currentMonthIso())} — once a category fills, it
             reopens next month.
           </p>
         </div>

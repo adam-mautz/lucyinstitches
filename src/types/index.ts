@@ -52,7 +52,8 @@ export interface Order {
   productType: ProductType;
   embroideryRequest: string;
   notes?: string;
-  inspirationImageUrl?: string;
+  inspirationImagePath?: string; // storage path (private bucket)
+  internalNotes?: string; // admin-only; absent on public reads
   status: OrderStatus;
   statusHistory: StatusEvent[];
   items: OrderItem[];

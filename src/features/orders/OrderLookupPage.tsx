@@ -7,16 +7,34 @@ import { Field } from '@/components/form/Field';
 import { Input } from '@/components/form/Input';
 import { StatusBadge } from '@/components/StatusBadge';
 import { lookupOrders } from './use-orders';
-import { PRODUCT_TYPE_LABELS, type Order } from '@/types';
+import { useToastStore } from '@/store/toast-store';
+import { PRODUCT_TYPE_LABELS, type Order, type ProductType } from '@/types';
+
+interface LookupResult {
+  orderNumber: string;
+  productType: ProductType;
+  customerName: string;
+  status: Order['status'];
+  uniqueTrackingToken: string;
+}
 
 // Look up an order by order number or phone number.
 export function OrderLookupPage() {
+  const push = useToastStore((s) => s.push);
   const [query, setQuery] = useState('');
-  const [results, setResults] = useState<Order[] | null>(null);
+  const [results, setResults] = useState<LookupResult[] | null>(null);
+  const [searching, setSearching] = useState(false);
 
-  const handleSearch = (e: React.FormEvent) => {
+  const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
-    setResults(lookupOrders(query));
+    setSearching(true);
+    try {
+      setResults(await lookupOrders(query));
+    } catch {
+      push('Couldn’t search right now — please try again.', 'error');
+    } finally {
+      setSearching(false);
+    }
   };
 
   return (
@@ -37,8 +55,8 @@ export function OrderLookupPage() {
               placeholder="LIS-0042 or 503-555-0142"
             />
           </Field>
-          <Button type="submit" disabled={!query.trim()}>
-            Find My Order
+          <Button type="submit" disabled={!query.trim() || searching}>
+            {searching ? 'Searching…' : 'Find My Order'}
           </Button>
         </form>
       </Card>
@@ -56,7 +74,7 @@ export function OrderLookupPage() {
             <div className="flex flex-col gap-3">
               {results.map((o) => (
                 <Link
-                  key={o.id}
+                  key={o.orderNumber}
                   to={`/track/${o.uniqueTrackingToken}`}
                   className="lis-card flex items-center justify-between transition hover:shadow-warm-lg"
                 >
