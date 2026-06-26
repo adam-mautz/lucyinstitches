@@ -56,7 +56,7 @@ const STATUS_MESSAGE: Record<string, string> = {
   in_progress: 'Good news — your piece is now being stitched.',
   completed: 'Your piece is finished and looking lovely.',
   shipped: 'Your order is on its way to you!',
-  cancelled: 'Your order has been cancelled. Reply if you have questions.',
+  cancelled: 'Your order has been cancelled.',
 };
 
 export interface OrderEmailData {
@@ -110,7 +110,8 @@ export function statusChangeEmail(o: OrderEmailData) {
       `<p style="font-size:15px;line-height:1.5">Hi ${o.customer_name},</p>
        <p style="font-size:15px;line-height:1.5">${message}</p>
        <p style="font-size:14px;color:#6B7FA3">${product} · ${o.order_number}</p>
-       <a href="${trackUrl}" style="display:inline-block;margin-top:8px;background:#6B7FA3;color:#F5F0E8;text-decoration:none;padding:10px 18px;border-radius:10px;font-family:Arial,sans-serif;font-size:14px">View your order</a>`
+       <a href="${trackUrl}" style="display:inline-block;margin-top:8px;background:#6B7FA3;color:#F5F0E8;text-decoration:none;padding:10px 18px;border-radius:10px;font-family:Arial,sans-serif;font-size:14px">View your order</a>
+       <p style="font-size:13px;line-height:1.5;color:#6B7FA3;margin-top:18px">Questions about your order? Just reply to this email — it comes straight to me.</p>`
     ),
   };
 }
