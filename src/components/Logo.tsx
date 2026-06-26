@@ -1,4 +1,6 @@
-import logoUrl from '@/assets/logo.png';
+// Optimized (~125KB) version for the app; the full-res original logo.png is
+// kept in assets for a future circle-crop pass.
+import logoUrl from '@/assets/logo.jpg';
 import { cn } from '@/lib/utils';
 
 interface LogoProps {
