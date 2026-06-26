@@ -1,7 +1,6 @@
 import { Link } from 'react-router-dom';
 import { PageContainer } from '@/components/PageContainer';
 import { Button } from '@/components/Button';
-import { Logo } from '@/components/Logo';
 import { AvailabilityDisplay } from './AvailabilityDisplay';
 import { FeaturedGallery } from '@/features/featured/FeaturedGallery';
 import { useFeaturedWorks } from '@/features/featured/use-featured';
@@ -16,8 +15,7 @@ export function HomePage() {
     <PageContainer>
       {/* Hero */}
       <section className="flex flex-col items-center py-10 text-center">
-        <Logo size={140} />
-        <h1 className="mt-6 font-display text-4xl italic text-slate-blue-dark sm:text-5xl">
+        <h1 className="font-display text-4xl italic text-slate-blue-dark sm:text-5xl">
           Lucy in Stitches
         </h1>
         <p className="mx-auto mt-4 max-w-xl font-body text-lg text-charcoal-light">
