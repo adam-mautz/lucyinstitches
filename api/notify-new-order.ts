@@ -6,7 +6,7 @@ import {
   EMAIL_FROM,
   OWNER_EMAIL,
   type OrderEmailData,
-} from './_lib';
+} from './_lib.js';
 
 // POST { token } — emails the OWNER about a newly placed order.
 // Public-callable (the order form is anon), but it only ever sends to the

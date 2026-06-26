@@ -6,7 +6,7 @@ import {
   statusChangeEmail,
   EMAIL_FROM,
   type OrderEmailData,
-} from './_lib';
+} from './_lib.js';
 
 const SUPABASE_URL = process.env.SUPABASE_URL ?? process.env.VITE_SUPABASE_URL;
 const ANON_KEY = process.env.VITE_SUPABASE_ANON_KEY;
