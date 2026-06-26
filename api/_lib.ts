@@ -11,6 +11,9 @@ const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY;
 export const OWNER_EMAIL = process.env.OWNER_EMAIL ?? '';
 export const EMAIL_FROM = process.env.EMAIL_FROM ?? 'onboarding@resend.dev';
 export const APP_URL = process.env.APP_URL ?? 'http://localhost:5173';
+// Where replies should land. Defaults to the owner address. Set this to a
+// receiving address (e.g. orders@lucyinstitches.com once forwarding is set up).
+export const REPLY_TO = process.env.REPLY_TO_EMAIL || OWNER_EMAIL;
 
 // Admin Supabase client (bypasses RLS) — server-only.
 export function supabaseAdmin() {

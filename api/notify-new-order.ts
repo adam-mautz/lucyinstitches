@@ -5,6 +5,7 @@ import {
   newOrderEmail,
   EMAIL_FROM,
   OWNER_EMAIL,
+  REPLY_TO,
   type OrderEmailData,
 } from './_lib.js';
 
@@ -37,6 +38,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const sent = await resend().emails.send({
       from: EMAIL_FROM,
       to: OWNER_EMAIL,
+      replyTo: REPLY_TO,
       subject: email.subject,
       html: email.html,
     });
