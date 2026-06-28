@@ -26,7 +26,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const { data, error } = await supabaseAdmin()
       .from('orders')
       .select(
-        'order_number, customer_name, customer_email, product_type, embroidery_request, status, unique_tracking_token'
+        'order_number, customer_name, customer_email, status, unique_tracking_token, order_items(product_type, embroidery_request)'
       )
       .eq('unique_tracking_token', token)
       .maybeSingle();
@@ -34,7 +34,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (error) throw error;
     if (!data) return res.status(404).json({ error: 'Order not found' });
 
-    const email = newOrderEmail(data as OrderEmailData);
+    const email = newOrderEmail({
+      ...data,
+      items: data.order_items ?? [],
+    } as OrderEmailData);
     const sent = await resend().emails.send({
       from: EMAIL_FROM,
       to: OWNER_EMAIL,

@@ -3,13 +3,12 @@ import { PageContainer } from '@/components/PageContainer';
 import { Card } from '@/components/Card';
 import { Button } from '@/components/Button';
 import { useToastStore } from '@/store/toast-store';
-import { PRODUCT_TYPE_LABELS, type ProductType } from '@/types';
 
 interface ConfirmationState {
   orderNumber?: string;
   token?: string;
   customerName?: string;
-  productType?: ProductType | null;
+  itemCount?: number;
 }
 
 // Thank-you page — order number + unique tracking link. Reads details
@@ -50,11 +49,11 @@ export function OrderConfirmationPage() {
           <p className="font-display text-2xl text-slate-blue-dark">
             {orderNumber}
           </p>
-          {state?.productType && (
+          {state?.itemCount ? (
             <p className="mt-1 font-body text-sm text-charcoal-light">
-              {PRODUCT_TYPE_LABELS[state.productType]}
+              {state.itemCount} item{state.itemCount > 1 ? 's' : ''}
             </p>
-          )}
+          ) : null}
         </div>
 
         <div className="mt-4 flex flex-col gap-2">

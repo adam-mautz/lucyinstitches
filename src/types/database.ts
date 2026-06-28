@@ -103,26 +103,38 @@ export type Database = {
         Row: {
           created_at: string
           description: string | null
+          embroidery_request: string | null
           id: string
+          inspiration_image_path: string | null
           is_complete: boolean
+          item_notes: string | null
           label: string
           order_id: string
+          product_type: Database["public"]["Enums"]["product_type"] | null
         }
         Insert: {
           created_at?: string
           description?: string | null
+          embroidery_request?: string | null
           id?: string
+          inspiration_image_path?: string | null
           is_complete?: boolean
+          item_notes?: string | null
           label: string
           order_id: string
+          product_type?: Database["public"]["Enums"]["product_type"] | null
         }
         Update: {
           created_at?: string
           description?: string | null
+          embroidery_request?: string | null
           id?: string
+          inspiration_image_path?: string | null
           is_complete?: boolean
+          item_notes?: string | null
           label?: string
           order_id?: string
+          product_type?: Database["public"]["Enums"]["product_type"] | null
         }
         Relationships: [
           {
@@ -140,7 +152,7 @@ export type Database = {
           customer_email: string
           customer_name: string
           customer_phone: string
-          embroidery_request: string
+          embroidery_request: string | null
           final_price: number | null
           id: string
           inspiration_image_path: string | null
@@ -148,7 +160,7 @@ export type Database = {
           month: string
           notes: string | null
           order_number: string
-          product_type: Database["public"]["Enums"]["product_type"]
+          product_type: Database["public"]["Enums"]["product_type"] | null
           quoted_price: number | null
           status: Database["public"]["Enums"]["order_status"]
           time_spent_minutes: number | null
@@ -160,7 +172,7 @@ export type Database = {
           customer_email: string
           customer_name: string
           customer_phone: string
-          embroidery_request: string
+          embroidery_request?: string | null
           final_price?: number | null
           id?: string
           inspiration_image_path?: string | null
@@ -168,7 +180,7 @@ export type Database = {
           month: string
           notes?: string | null
           order_number: string
-          product_type: Database["public"]["Enums"]["product_type"]
+          product_type?: Database["public"]["Enums"]["product_type"] | null
           quoted_price?: number | null
           status?: Database["public"]["Enums"]["order_status"]
           time_spent_minutes?: number | null
@@ -180,7 +192,7 @@ export type Database = {
           customer_email?: string
           customer_name?: string
           customer_phone?: string
-          embroidery_request?: string
+          embroidery_request?: string | null
           final_price?: number | null
           id?: string
           inspiration_image_path?: string | null
@@ -188,7 +200,7 @@ export type Database = {
           month?: string
           notes?: string | null
           order_number?: string
-          product_type?: Database["public"]["Enums"]["product_type"]
+          product_type?: Database["public"]["Enums"]["product_type"] | null
           quoted_price?: number | null
           status?: Database["public"]["Enums"]["order_status"]
           time_spent_minutes?: number | null
@@ -239,11 +251,8 @@ export type Database = {
           p_customer_email: string
           p_customer_name: string
           p_customer_phone: string
-          p_embroidery_request: string
-          p_inspiration_image_path?: string
+          p_items: Json
           p_month: string
-          p_notes?: string
-          p_product_type: Database["public"]["Enums"]["product_type"]
         }
         Returns: Json
       }

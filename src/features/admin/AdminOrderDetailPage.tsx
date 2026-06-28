@@ -10,8 +10,6 @@ import { Textarea } from '@/components/form/Textarea';
 import { OrderTimeline } from '@/features/orders/OrderTimeline';
 import { useOrderById } from '@/features/orders/use-orders';
 import {
-  useAddItem,
-  useDeleteItem,
   useUpdateItem,
   useUpdateOrder,
 } from '@/features/orders/use-order-mutations';
@@ -23,12 +21,12 @@ import {
   ORDER_STATUS_LABELS,
   PRODUCT_TYPE_LABELS,
   type Order,
+  type OrderItem,
   type OrderStatus,
 } from '@/types';
 
 const STATUSES = Object.keys(ORDER_STATUS_LABELS) as OrderStatus[];
 
-// numeric input -> number | null (empty clears the column)
 const toNum = (s: string): number | null => {
   const t = s.trim();
   if (t === '') return null;
@@ -40,9 +38,7 @@ export function AdminOrderDetailPage() {
   const { orderId } = useParams<{ orderId: string }>();
   const { data: order, isLoading } = useOrderById(orderId);
 
-  if (isLoading) {
-    return <Card className="h-64 animate-pulse bg-white/40" />;
-  }
+  if (isLoading) return <Card className="h-64 animate-pulse bg-white/40" />;
   if (!order) {
     return (
       <Card className="text-center">
@@ -56,17 +52,12 @@ export function AdminOrderDetailPage() {
       </Card>
     );
   }
-
-  // key on id so editable inputs re-init when navigating between orders.
   return <OrderDetail key={order.id} order={order} />;
 }
 
 function OrderDetail({ order }: { order: Order }) {
   const push = useToastStore((s) => s.push);
   const updateOrder = useUpdateOrder();
-  const addItem = useAddItem();
-  const updateItem = useUpdateItem();
-  const deleteItem = useDeleteItem();
 
   const [status, setStatus] = useState<OrderStatus>(order.status);
   const [quoted, setQuoted] = useState(order.quotedPrice?.toString() ?? '');
@@ -75,24 +66,6 @@ function OrderDetail({ order }: { order: Order }) {
     order.timeSpentMinutes?.toString() ?? ''
   );
   const [internalNote, setInternalNote] = useState(order.internalNotes ?? '');
-  const [newLabel, setNewLabel] = useState('');
-  const [newDesc, setNewDesc] = useState('');
-  const [imageUrl, setImageUrl] = useState<string | null>(null);
-
-  // Resolve a short-lived signed URL for the private inspiration image.
-  useEffect(() => {
-    if (!order.inspirationImagePath) return;
-    let active = true;
-    supabase.storage
-      .from('inspiration')
-      .createSignedUrl(order.inspirationImagePath, 3600)
-      .then(({ data }) => {
-        if (active) setImageUrl(data?.signedUrl ?? null);
-      });
-    return () => {
-      active = false;
-    };
-  }, [order.inspirationImagePath]);
 
   const onError = (err: unknown) =>
     push(err instanceof Error ? err.message : 'Something went wrong', 'error');
@@ -103,7 +76,6 @@ function OrderDetail({ order }: { order: Order }) {
       {
         onSuccess: () => {
           push(`Status set to ${ORDER_STATUS_LABELS[status]}`, 'success');
-          // Email the customer about the change (best-effort, admin-only API).
           if (status !== order.status) void notifyStatusChange(order.id);
         },
         onError,
@@ -131,34 +103,6 @@ function OrderDetail({ order }: { order: Order }) {
       { onSuccess: () => push('Note saved', 'success'), onError }
     );
 
-  const handleAddItem = () => {
-    if (!newLabel.trim()) return;
-    addItem.mutate(
-      {
-        order_id: order.id,
-        label: newLabel.trim(),
-        description: newDesc.trim() || null,
-      },
-      {
-        onSuccess: () => {
-          setNewLabel('');
-          setNewDesc('');
-          push('Item added', 'success');
-        },
-        onError,
-      }
-    );
-  };
-
-  const toggleItem = (id: string, isComplete: boolean) =>
-    updateItem.mutate(
-      { id, orderId: order.id, patch: { is_complete: !isComplete } },
-      { onError }
-    );
-
-  const removeItem = (id: string) =>
-    deleteItem.mutate({ id, orderId: order.id }, { onError });
-
   return (
     <div className="flex flex-col gap-6">
       {/* Header */}
@@ -175,8 +119,8 @@ function OrderDetail({ order }: { order: Order }) {
               {order.orderNumber}
             </h1>
             <p className="font-body text-charcoal-light">
-              {PRODUCT_TYPE_LABELS[order.productType]} · placed{' '}
-              {formatDate(order.createdAt)}
+              {order.items.length} item{order.items.length === 1 ? '' : 's'} ·
+              placed {formatDate(order.createdAt)}
             </p>
           </div>
           <StatusBadge status={order.status} />
@@ -184,7 +128,7 @@ function OrderDetail({ order }: { order: Order }) {
       </div>
 
       <div className="grid gap-6 lg:grid-cols-3">
-        {/* Left: order info + items */}
+        {/* Left: customer + items + internal notes */}
         <div className="flex flex-col gap-6 lg:col-span-2">
           <Card>
             <h2 className="mb-3 font-display text-xl">Customer</h2>
@@ -195,104 +139,17 @@ function OrderDetail({ order }: { order: Order }) {
             </dl>
           </Card>
 
-          <Card>
-            <h2 className="mb-3 font-display text-xl">Request</h2>
-            <p className="font-body text-charcoal">{order.embroideryRequest}</p>
-            {order.notes && (
-              <p className="mt-2 font-body text-sm text-charcoal-light">
-                Customer note: {order.notes}
-              </p>
-            )}
-            {order.inspirationImagePath && (
-              <div className="mt-4">
-                <h3 className="mb-2 font-sans text-xs uppercase tracking-wide text-charcoal-light">
-                  Inspiration
-                </h3>
-                {imageUrl ? (
-                  <a href={imageUrl} target="_blank" rel="noreferrer">
-                    <img
-                      src={imageUrl}
-                      alt="Customer inspiration"
-                      className="max-h-64 rounded-xl border border-cream-dark object-contain"
-                    />
-                  </a>
-                ) : (
-                  <div className="h-32 w-32 animate-pulse rounded-xl bg-white/50" />
-                )}
-              </div>
-            )}
-          </Card>
-
-          {/* Item tagging */}
-          <Card>
-            <h2 className="mb-3 font-display text-xl">Items</h2>
-            <div className="flex flex-col gap-2">
-              {order.items.length === 0 && (
-                <p className="font-body text-sm text-charcoal-light">
-                  No items tagged yet — add tags like H1, H2 for multi-item
-                  orders.
-                </p>
-              )}
-              {order.items.map((it) => (
-                <div
-                  key={it.id}
-                  className="flex items-center gap-3 rounded-lg border border-cream-dark bg-white/60 px-3 py-2"
-                >
-                  <button
-                    onClick={() => toggleItem(it.id, it.isComplete)}
-                    className={cn(
-                      'flex h-6 w-6 items-center justify-center rounded-full text-xs',
-                      it.isComplete
-                        ? 'bg-sage text-charcoal'
-                        : 'bg-cream-dark text-charcoal-light'
-                    )}
-                    aria-label="Toggle complete"
-                  >
-                    {it.isComplete ? '✓' : ''}
-                  </button>
-                  <span className="font-sans text-sm font-medium text-charcoal">
-                    {it.label}
-                  </span>
-                  {it.description && (
-                    <span className="flex-1 font-body text-sm text-charcoal-light">
-                      {it.description}
-                    </span>
-                  )}
-                  <button
-                    onClick={() => removeItem(it.id)}
-                    className="ml-auto font-sans text-xs text-mauve-dark hover:underline"
-                  >
-                    Remove
-                  </button>
-                </div>
+          <div>
+            <h2 className="mb-3 font-display text-xl">
+              Items ({order.items.length})
+            </h2>
+            <div className="flex flex-col gap-4">
+              {order.items.map((item) => (
+                <ItemCard key={item.id} item={item} orderId={order.id} />
               ))}
             </div>
+          </div>
 
-            <div className="mt-4 flex flex-col gap-2 sm:flex-row">
-              <Input
-                value={newLabel}
-                onChange={(e) => setNewLabel(e.target.value)}
-                placeholder="Tag (e.g. H1)"
-                className="sm:w-32"
-              />
-              <Input
-                value={newDesc}
-                onChange={(e) => setNewDesc(e.target.value)}
-                placeholder="Description (optional)"
-                className="flex-1"
-              />
-              <Button
-                variant="secondary"
-                onClick={handleAddItem}
-                disabled={addItem.isPending}
-                className="shrink-0"
-              >
-                Add
-              </Button>
-            </div>
-          </Card>
-
-          {/* Internal notes */}
           <Card>
             <h2 className="mb-3 font-display text-xl">Internal Notes</h2>
             <p className="mb-2 font-body text-xs text-charcoal-light">
@@ -406,6 +263,116 @@ function OrderDetail({ order }: { order: Order }) {
         </div>
       </div>
     </div>
+  );
+}
+
+// One line item: customer details (read-only) + admin tag/complete controls.
+function ItemCard({ item, orderId }: { item: OrderItem; orderId: string }) {
+  const push = useToastStore((s) => s.push);
+  const updateItem = useUpdateItem();
+  const [label, setLabel] = useState(item.label);
+  const [description, setDescription] = useState(item.description ?? '');
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!item.inspirationImagePath) return;
+    let active = true;
+    supabase.storage
+      .from('inspiration')
+      .createSignedUrl(item.inspirationImagePath, 3600)
+      .then(({ data }) => {
+        if (active) setImageUrl(data?.signedUrl ?? null);
+      });
+    return () => {
+      active = false;
+    };
+  }, [item.inspirationImagePath]);
+
+  const onError = (err: unknown) =>
+    push(err instanceof Error ? err.message : 'Update failed', 'error');
+
+  const toggleComplete = () =>
+    updateItem.mutate(
+      { id: item.id, orderId, patch: { is_complete: !item.isComplete } },
+      { onError }
+    );
+
+  const saveField = (patch: { label?: string; description?: string }) =>
+    updateItem.mutate({ id: item.id, orderId, patch }, { onError });
+
+  return (
+    <Card>
+      <div className="flex gap-4">
+        {item.inspirationImagePath && (
+          <div className="shrink-0">
+            {imageUrl ? (
+              <a href={imageUrl} target="_blank" rel="noreferrer">
+                <img
+                  src={imageUrl}
+                  alt="Inspiration"
+                  className="h-20 w-20 rounded-lg object-cover"
+                />
+              </a>
+            ) : (
+              <div className="h-20 w-20 animate-pulse rounded-lg bg-white/50" />
+            )}
+          </div>
+        )}
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center justify-between gap-2">
+            <span className="font-display text-lg">
+              {PRODUCT_TYPE_LABELS[item.productType]}
+            </span>
+            <button
+              onClick={toggleComplete}
+              className={cn(
+                'rounded-full px-3 py-1 font-sans text-xs font-medium transition',
+                item.isComplete
+                  ? 'bg-sage text-charcoal'
+                  : 'bg-cream-dark text-charcoal-light hover:bg-cream'
+              )}
+            >
+              {item.isComplete ? '✓ Complete' : 'Mark complete'}
+            </button>
+          </div>
+          <p className="mt-1 font-body text-sm text-charcoal">
+            {item.embroideryRequest}
+          </p>
+          {item.notes && (
+            <p className="mt-1 font-body text-xs text-charcoal-light">
+              Customer note: {item.notes}
+            </p>
+          )}
+        </div>
+      </div>
+
+      {/* Admin per-item controls */}
+      <div className="mt-4 flex flex-col gap-3 sm:flex-row">
+        <div className="sm:w-32">
+          <label className="font-sans text-xs text-charcoal-light">Tag</label>
+          <Input
+            value={label}
+            onChange={(e) => setLabel(e.target.value)}
+            onBlur={() => label !== item.label && saveField({ label })}
+            placeholder="H1"
+          />
+        </div>
+        <div className="flex-1">
+          <label className="font-sans text-xs text-charcoal-light">
+            Your note
+          </label>
+          <Input
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            onBlur={() =>
+              description !== (item.description ?? '') &&
+              saveField({ description: description || undefined })
+            }
+            placeholder="Internal note for this item"
+          />
+        </div>
+      </div>
+    </Card>
   );
 }
 

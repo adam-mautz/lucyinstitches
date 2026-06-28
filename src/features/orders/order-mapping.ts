@@ -11,6 +11,10 @@ import type {
 export interface DbOrderItem {
   id: string;
   order_id: string;
+  product_type: ProductType | null;
+  embroidery_request: string | null;
+  item_notes: string | null;
+  inspiration_image_path: string | null;
   label: string;
   description: string | null;
   is_complete: boolean;
@@ -31,8 +35,8 @@ export interface DbOrder {
   customer_name: string;
   customer_email: string;
   customer_phone: string;
-  product_type: ProductType;
-  embroidery_request: string;
+  product_type: ProductType | null;
+  embroidery_request: string | null;
   notes: string | null;
   inspiration_image_path: string | null;
   internal_notes: string | null;
@@ -52,6 +56,10 @@ function mapItem(i: DbOrderItem): OrderItem {
   return {
     id: i.id,
     orderId: i.order_id,
+    productType: i.product_type ?? 'custom',
+    embroideryRequest: i.embroidery_request ?? '',
+    notes: i.item_notes ?? undefined,
+    inspirationImagePath: i.inspiration_image_path ?? undefined,
     label: i.label,
     description: i.description ?? undefined,
     isComplete: i.is_complete,
@@ -82,8 +90,8 @@ export function mapOrder(row: DbOrder): Order {
     customerName: row.customer_name,
     customerEmail: row.customer_email,
     customerPhone: row.customer_phone,
-    productType: row.product_type,
-    embroideryRequest: row.embroidery_request,
+    productType: row.product_type ?? undefined,
+    embroideryRequest: row.embroidery_request ?? undefined,
     notes: row.notes ?? undefined,
     inspirationImagePath: row.inspiration_image_path ?? undefined,
     internalNotes: row.internal_notes ?? undefined,

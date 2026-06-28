@@ -123,7 +123,9 @@ export function AdminOrdersListPage() {
                   </Td>
                   <Td>
                     <span className="font-body text-sm text-charcoal-light">
-                      {PRODUCT_TYPE_LABELS[o.productType]}
+                      {o.items.length === 1
+                        ? PRODUCT_TYPE_LABELS[o.items[0].productType]
+                        : `${o.items.length} items`}
                     </span>
                   </Td>
                   <Td>

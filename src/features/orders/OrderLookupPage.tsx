@@ -8,14 +8,14 @@ import { Input } from '@/components/form/Input';
 import { StatusBadge } from '@/components/StatusBadge';
 import { lookupOrders } from './use-orders';
 import { useToastStore } from '@/store/toast-store';
-import { PRODUCT_TYPE_LABELS, type Order, type ProductType } from '@/types';
+import type { Order } from '@/types';
 
 interface LookupResult {
   orderNumber: string;
-  productType: ProductType;
   customerName: string;
   status: Order['status'];
   uniqueTrackingToken: string;
+  itemCount: number;
 }
 
 // Look up an order by order number or phone number.
@@ -83,7 +83,8 @@ export function OrderLookupPage() {
                       {o.orderNumber}
                     </p>
                     <p className="font-body text-sm text-charcoal-light">
-                      {PRODUCT_TYPE_LABELS[o.productType]} · {o.customerName}
+                      {o.itemCount} item{o.itemCount === 1 ? '' : 's'} ·{' '}
+                      {o.customerName}
                     </p>
                   </div>
                   <StatusBadge status={o.status} />

@@ -62,14 +62,11 @@ export function AdminDashboardPage() {
         timeZone: 'UTC',
       });
 
-    // Time logged per product type.
+    // Item count per product type (across all orders' line items).
     const byProduct = new Map<string, number>();
     for (const o of all) {
-      if (o.timeSpentMinutes) {
-        byProduct.set(
-          o.productType,
-          (byProduct.get(o.productType) ?? 0) + o.timeSpentMinutes
-        );
+      for (const it of o.items) {
+        byProduct.set(it.productType, (byProduct.get(it.productType) ?? 0) + 1);
       }
     }
 
@@ -82,9 +79,9 @@ export function AdminDashboardPage() {
         label: monthLabel(m),
         value: byMonth.get(m)!.revenue,
       })),
-      timeByProduct: [...byProduct.entries()].map(([type, minutes]) => ({
+      itemsByProduct: [...byProduct.entries()].map(([type, count]) => ({
         label: PRODUCT_BY_TYPE[type as keyof typeof PRODUCT_BY_TYPE].label,
-        value: minutes,
+        value: count,
       })),
     };
   }, [orders]);
@@ -160,7 +157,10 @@ export function AdminDashboardPage() {
                     {o.orderNumber} · {o.customerName}
                   </p>
                   <p className="truncate font-body text-xs text-charcoal-light">
-                    {PRODUCT_TYPE_LABELS[o.productType]} · {formatDate(o.createdAt)}
+                    {o.items.length === 1
+                      ? PRODUCT_TYPE_LABELS[o.items[0].productType]
+                      : `${o.items.length} items`}{' '}
+                    · {formatDate(o.createdAt)}
                   </p>
                 </div>
                 <StatusBadge status={o.status} />
@@ -229,12 +229,11 @@ export function AdminDashboardPage() {
           />
         </Card>
         <Card>
-          <h2 className="mb-4 font-display text-xl">Time by Product</h2>
+          <h2 className="mb-4 font-display text-xl">Items by Product</h2>
           <BarChart
-            data={charts.timeByProduct}
-            format={(v) => formatDuration(v)}
+            data={charts.itemsByProduct}
             barClassName="bg-mauve"
-            emptyMessage="No time logged yet."
+            emptyMessage="No items yet."
           />
         </Card>
       </div>

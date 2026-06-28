@@ -59,14 +59,33 @@ const STATUS_MESSAGE: Record<string, string> = {
   cancelled: 'Your order has been cancelled.',
 };
 
+export interface OrderEmailItem {
+  product_type: string;
+  embroidery_request: string;
+}
+
 export interface OrderEmailData {
   order_number: string;
   customer_name: string;
   customer_email: string;
-  product_type: string;
-  embroidery_request: string;
   status: string;
   unique_tracking_token: string;
+  items: OrderEmailItem[];
+}
+
+// Escape user-supplied text before embedding in email HTML.
+function esc(s: string): string {
+  return s
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
+function itemsLabel(items: OrderEmailItem[]): string {
+  if (items.length === 1) {
+    return PRODUCT_LABELS[items[0].product_type] ?? items[0].product_type;
+  }
+  return `${items.length} items`;
 }
 
 function shell(title: string, bodyHtml: string) {
@@ -81,17 +100,24 @@ function shell(title: string, bodyHtml: string) {
 
 // Email to the OWNER when a new order arrives.
 export function newOrderEmail(o: OrderEmailData) {
-  const product = PRODUCT_LABELS[o.product_type] ?? o.product_type;
+  const count = o.items.length;
+  const itemsHtml = o.items
+    .map(
+      (it) =>
+        `<li style="margin-bottom:6px"><strong>${
+          PRODUCT_LABELS[it.product_type] ?? it.product_type
+        }</strong>: ${esc(it.embroidery_request)}</li>`
+    )
+    .join('');
   return {
-    subject: `New order ${o.order_number} — ${product}`,
+    subject: `New order ${o.order_number} — ${count} item${count > 1 ? 's' : ''}`,
     html: shell(
       `New order: ${o.order_number}`,
       `<p style="font-size:15px;line-height:1.5">
-        <strong>${o.customer_name}</strong> just placed an order for a
-        <strong>${product}</strong>.</p>
-       <p style="font-size:15px;line-height:1.5;background:#F5F0E8;border-radius:10px;padding:12px">
-        “${o.embroidery_request}”</p>
-       <p style="font-size:14px">Contact: ${o.customer_email}</p>
+        <strong>${esc(o.customer_name)}</strong> just placed an order with
+        ${count} item${count > 1 ? 's' : ''}.</p>
+       <ul style="font-size:15px;line-height:1.5;background:#F5F0E8;border-radius:10px;padding:12px 12px 12px 28px;margin:0">${itemsHtml}</ul>
+       <p style="font-size:14px;margin-top:12px">Contact: ${esc(o.customer_email)}</p>
        <a href="${APP_URL}/admin/orders" style="display:inline-block;margin-top:8px;background:#6B7FA3;color:#F5F0E8;text-decoration:none;padding:10px 18px;border-radius:10px;font-family:Arial,sans-serif;font-size:14px">Open dashboard</a>`
     ),
   };
@@ -99,7 +125,7 @@ export function newOrderEmail(o: OrderEmailData) {
 
 // Email to the CUSTOMER when their order status changes.
 export function statusChangeEmail(o: OrderEmailData) {
-  const product = PRODUCT_LABELS[o.product_type] ?? o.product_type;
+  const product = itemsLabel(o.items);
   const statusLabel = STATUS_LABELS[o.status] ?? o.status;
   const message = STATUS_MESSAGE[o.status] ?? '';
   const trackUrl = `${APP_URL}/track/${o.unique_tracking_token}`;
@@ -107,7 +133,7 @@ export function statusChangeEmail(o: OrderEmailData) {
     subject: `Your order ${o.order_number} is now ${statusLabel}`,
     html: shell(
       `Order ${o.order_number}: ${statusLabel}`,
-      `<p style="font-size:15px;line-height:1.5">Hi ${o.customer_name},</p>
+      `<p style="font-size:15px;line-height:1.5">Hi ${esc(o.customer_name)},</p>
        <p style="font-size:15px;line-height:1.5">${message}</p>
        <p style="font-size:14px;color:#6B7FA3">${product} · ${o.order_number}</p>
        <a href="${trackUrl}" style="display:inline-block;margin-top:8px;background:#6B7FA3;color:#F5F0E8;text-decoration:none;padding:10px 18px;border-radius:10px;font-family:Arial,sans-serif;font-size:14px">View your order</a>

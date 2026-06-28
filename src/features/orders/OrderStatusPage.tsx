@@ -47,8 +47,8 @@ export function OrderStatusPage() {
             {order.orderNumber}
           </h1>
           <p className="font-body text-charcoal-light">
-            {PRODUCT_TYPE_LABELS[order.productType]} · placed{' '}
-            {formatDate(order.createdAt)}
+            {order.items.length} item{order.items.length === 1 ? '' : 's'} ·
+            placed {formatDate(order.createdAt)}
           </p>
         </div>
         <StatusBadge status={order.status} />
@@ -56,45 +56,40 @@ export function OrderStatusPage() {
 
       <div className="grid gap-6 md:grid-cols-2">
         <Card>
-          <h2 className="mb-3 font-display text-xl">Your Request</h2>
-          <p className="font-body text-charcoal">{order.embroideryRequest}</p>
-          {order.notes && (
-            <p className="mt-3 font-body text-sm text-charcoal-light">
-              {order.notes}
-            </p>
-          )}
-
-          {order.items.length > 0 && (
-            <div className="mt-5">
-              <h3 className="mb-2 font-sans text-xs uppercase tracking-wide text-charcoal-light">
-                Items
-              </h3>
-              <ul className="flex flex-col gap-1.5">
-                {order.items.map((it) => (
-                  <li
-                    key={it.id}
-                    className="flex items-center gap-2 font-body text-sm"
+          <h2 className="mb-3 font-display text-xl">
+            Your {order.items.length === 1 ? 'Item' : 'Items'}
+          </h2>
+          <ul className="flex flex-col gap-3">
+            {order.items.map((it) => (
+              <li
+                key={it.id}
+                className="rounded-lg border border-cream-dark bg-white/60 p-3"
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <span className="font-display text-base">
+                    {PRODUCT_TYPE_LABELS[it.productType]}
+                  </span>
+                  <span
+                    className={
+                      it.isComplete
+                        ? 'font-sans text-xs text-sage-dark'
+                        : 'font-sans text-xs text-charcoal-light'
+                    }
                   >
-                    <span
-                      className={
-                        it.isComplete
-                          ? 'text-sage-dark'
-                          : 'text-charcoal-light'
-                      }
-                    >
-                      {it.isComplete ? '✓' : '○'}
-                    </span>
-                    <span className="font-medium">{it.label}</span>
-                    {it.description && (
-                      <span className="text-charcoal-light">
-                        — {it.description}
-                      </span>
-                    )}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
+                    {it.isComplete ? '✓ Done' : 'In progress'}
+                  </span>
+                </div>
+                <p className="mt-1 font-body text-sm text-charcoal">
+                  {it.embroideryRequest}
+                </p>
+                {it.notes && (
+                  <p className="mt-1 font-body text-xs text-charcoal-light">
+                    {it.notes}
+                  </p>
+                )}
+              </li>
+            ))}
+          </ul>
         </Card>
 
         <Card>

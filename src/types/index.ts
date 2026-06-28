@@ -29,9 +29,13 @@ export interface MonthlyCapacity {
 
 export interface OrderItem {
   id: string;
-  orderId: string;
-  label: string; // owner's tag, e.g. "H1", "H2"
-  description?: string;
+  orderId?: string; // present on admin reads; omitted by the public RPC
+  productType: ProductType;
+  embroideryRequest: string;
+  notes?: string; // customer's per-item notes
+  inspirationImagePath?: string; // admin reads only
+  label: string; // owner's tag, e.g. "Item 1", "H1"
+  description?: string; // owner's internal per-item note
   isComplete: boolean;
 }
 
@@ -49,10 +53,12 @@ export interface Order {
   customerName: string;
   customerEmail: string;
   customerPhone: string;
-  productType: ProductType;
-  embroideryRequest: string;
+  // Product details now live on items (see `items`). These order-level
+  // fields are legacy single-item data and are undefined on new orders.
+  productType?: ProductType;
+  embroideryRequest?: string;
   notes?: string;
-  inspirationImagePath?: string; // storage path (private bucket)
+  inspirationImagePath?: string;
   internalNotes?: string; // admin-only; absent on public reads
   status: OrderStatus;
   statusHistory: StatusEvent[];

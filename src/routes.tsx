@@ -5,6 +5,7 @@ import { NotFoundPage } from '@/components/NotFoundPage';
 // Customer-facing
 import { HomePage } from '@/features/capacity/HomePage';
 import { OrderFormPage } from '@/features/orders/OrderFormPage';
+import { CartPage } from '@/features/orders/CartPage';
 import { OrderConfirmationPage } from '@/features/orders/OrderConfirmationPage';
 import { OrderLookupPage } from '@/features/orders/OrderLookupPage';
 import { OrderStatusPage } from '@/features/orders/OrderStatusPage';
@@ -27,6 +28,7 @@ export function AppRoutes() {
       <Route element={<PublicLayout />}>
         <Route path="/" element={<HomePage />} />
         <Route path="/order" element={<OrderFormPage />} />
+        <Route path="/order/cart" element={<CartPage />} />
         <Route path="/order/confirmation" element={<OrderConfirmationPage />} />
         <Route path="/lookup" element={<OrderLookupPage />} />
         <Route path="/track/:token" element={<OrderStatusPage />} />

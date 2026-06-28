@@ -57,10 +57,10 @@ export function useOrderByToken(token: string | undefined) {
 
 interface LookupResult {
   orderNumber: string;
-  productType: Order['productType'];
   customerName: string;
   status: Order['status'];
   uniqueTrackingToken: string;
+  itemCount: number;
 }
 
 // Public: lookup by order number or phone via SECURITY DEFINER RPC.

@@ -14,11 +14,22 @@ const COLUMNS: Array<{ header: string; get: (o: Order) => string | number | unde
   [
     { header: 'Order #', get: (o) => o.orderNumber },
     { header: 'Status', get: (o) => ORDER_STATUS_LABELS[o.status] },
-    { header: 'Product', get: (o) => PRODUCT_TYPE_LABELS[o.productType] },
+    {
+      header: 'Products',
+      get: (o) =>
+        o.items.map((i) => PRODUCT_TYPE_LABELS[i.productType]).join(', '),
+    },
+    { header: 'Items', get: (o) => o.items.length },
     { header: 'Customer', get: (o) => o.customerName },
     { header: 'Email', get: (o) => o.customerEmail },
     { header: 'Phone', get: (o) => o.customerPhone },
-    { header: 'Request', get: (o) => o.embroideryRequest },
+    {
+      header: 'Requests',
+      get: (o) =>
+        o.items
+          .map((i) => `${PRODUCT_TYPE_LABELS[i.productType]}: ${i.embroideryRequest}`)
+          .join(' | '),
+    },
     { header: 'Quoted', get: (o) => o.quotedPrice ?? '' },
     { header: 'Final', get: (o) => o.finalPrice ?? '' },
     { header: 'Minutes', get: (o) => o.timeSpentMinutes ?? '' },
