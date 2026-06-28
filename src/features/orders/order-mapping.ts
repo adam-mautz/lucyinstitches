@@ -17,7 +17,7 @@ export interface DbOrderItem {
   inspiration_image_path: string | null;
   label: string;
   description: string | null;
-  is_complete: boolean;
+  production_state: string;
   created_at: string;
 }
 
@@ -62,7 +62,7 @@ function mapItem(i: DbOrderItem): OrderItem {
     inspirationImagePath: i.inspiration_image_path ?? undefined,
     label: i.label,
     description: i.description ?? undefined,
-    isComplete: i.is_complete,
+    productionState: i.production_state,
   };
 }
 

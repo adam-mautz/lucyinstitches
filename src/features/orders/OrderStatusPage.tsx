@@ -65,20 +65,9 @@ export function OrderStatusPage() {
                 key={it.id}
                 className="rounded-lg border border-cream-dark bg-white/60 p-3"
               >
-                <div className="flex items-center justify-between gap-2">
-                  <span className="font-display text-base">
-                    {PRODUCT_TYPE_LABELS[it.productType]}
-                  </span>
-                  <span
-                    className={
-                      it.isComplete
-                        ? 'font-sans text-xs text-sage-dark'
-                        : 'font-sans text-xs text-charcoal-light'
-                    }
-                  >
-                    {it.isComplete ? '✓ Done' : 'In progress'}
-                  </span>
-                </div>
+                <span className="font-display text-base">
+                  {PRODUCT_TYPE_LABELS[it.productType]}
+                </span>
                 <p className="mt-1 font-body text-sm text-charcoal">
                   {it.embroideryRequest}
                 </p>

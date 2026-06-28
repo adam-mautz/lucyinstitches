@@ -14,6 +14,7 @@ function useOrderInvalidator() {
     qc.invalidateQueries({ queryKey: ['orders'] });
     qc.invalidateQueries({ queryKey: ['order', 'id', orderId] });
     qc.invalidateQueries({ queryKey: ['capacity'] });
+    qc.invalidateQueries({ queryKey: ['production-items'] });
   };
 }
 

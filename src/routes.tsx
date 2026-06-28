@@ -19,6 +19,8 @@ import { AdminDashboardPage } from '@/features/admin/AdminDashboardPage';
 import { AdminOrdersListPage } from '@/features/admin/AdminOrdersListPage';
 import { AdminOrderDetailPage } from '@/features/admin/AdminOrderDetailPage';
 import { AdminFeaturedPage } from '@/features/admin/AdminFeaturedPage';
+import { AdminBoardPage } from '@/features/admin/AdminBoardPage';
+import { AdminQuickUpdatePage } from '@/features/admin/AdminQuickUpdatePage';
 import { CapacityManagerPage } from '@/features/capacity/CapacityManagerPage';
 
 export function AppRoutes() {
@@ -50,6 +52,8 @@ export function AppRoutes() {
         <Route index element={<AdminDashboardPage />} />
         <Route path="orders" element={<AdminOrdersListPage />} />
         <Route path="orders/:orderId" element={<AdminOrderDetailPage />} />
+        <Route path="board" element={<AdminBoardPage />} />
+        <Route path="quick" element={<AdminQuickUpdatePage />} />
         <Route path="featured" element={<AdminFeaturedPage />} />
         <Route path="capacity" element={<CapacityManagerPage />} />
       </Route>

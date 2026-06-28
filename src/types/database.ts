@@ -106,11 +106,11 @@ export type Database = {
           embroidery_request: string | null
           id: string
           inspiration_image_path: string | null
-          is_complete: boolean
           item_notes: string | null
           label: string
           order_id: string
           product_type: Database["public"]["Enums"]["product_type"] | null
+          production_state: string
         }
         Insert: {
           created_at?: string
@@ -118,11 +118,11 @@ export type Database = {
           embroidery_request?: string | null
           id?: string
           inspiration_image_path?: string | null
-          is_complete?: boolean
           item_notes?: string | null
           label: string
           order_id: string
           product_type?: Database["public"]["Enums"]["product_type"] | null
+          production_state?: string
         }
         Update: {
           created_at?: string
@@ -130,11 +130,11 @@ export type Database = {
           embroidery_request?: string | null
           id?: string
           inspiration_image_path?: string | null
-          is_complete?: boolean
           item_notes?: string | null
           label?: string
           order_id?: string
           product_type?: Database["public"]["Enums"]["product_type"] | null
+          production_state?: string
         }
         Relationships: [
           {

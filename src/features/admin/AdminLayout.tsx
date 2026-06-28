@@ -5,6 +5,8 @@ import { cn } from '@/lib/utils';
 const navItems = [
   { to: '/admin', label: 'Dashboard', end: true },
   { to: '/admin/orders', label: 'Orders', end: false },
+  { to: '/admin/quick', label: 'Quick Update', end: false },
+  { to: '/admin/board', label: 'Board', end: false },
   { to: '/admin/capacity', label: 'Capacity', end: false },
   { to: '/admin/featured', label: 'Featured', end: false },
 ];

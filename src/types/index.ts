@@ -36,7 +36,7 @@ export interface OrderItem {
   inspirationImagePath?: string; // admin reads only
   label: string; // owner's tag, e.g. "Item 1", "H1"
   description?: string; // owner's internal per-item note
-  isComplete: boolean;
+  productionState: string; // internal pipeline state (see production-states)
 }
 
 export interface StatusEvent {

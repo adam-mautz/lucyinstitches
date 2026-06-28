@@ -16,7 +16,11 @@ import {
 import { supabase } from '@/lib/supabase';
 import { notifyStatusChange } from '@/lib/notify';
 import { useToastStore } from '@/store/toast-store';
-import { cn, formatDate, formatDuration } from '@/lib/utils';
+import { formatDate, formatDuration } from '@/lib/utils';
+import {
+  PRODUCTION_STATES,
+  productionStateLabel,
+} from '@/lib/production-states';
 import {
   ORDER_STATUS_LABELS,
   PRODUCT_TYPE_LABELS,
@@ -291,9 +295,9 @@ function ItemCard({ item, orderId }: { item: OrderItem; orderId: string }) {
   const onError = (err: unknown) =>
     push(err instanceof Error ? err.message : 'Update failed', 'error');
 
-  const toggleComplete = () =>
+  const setState = (production_state: string) =>
     updateItem.mutate(
-      { id: item.id, orderId, patch: { is_complete: !item.isComplete } },
+      { id: item.id, orderId, patch: { production_state } },
       { onError }
     );
 
@@ -323,17 +327,17 @@ function ItemCard({ item, orderId }: { item: OrderItem; orderId: string }) {
             <span className="font-display text-lg">
               {PRODUCT_TYPE_LABELS[item.productType]}
             </span>
-            <button
-              onClick={toggleComplete}
-              className={cn(
-                'rounded-full px-3 py-1 font-sans text-xs font-medium transition',
-                item.isComplete
-                  ? 'bg-sage text-charcoal'
-                  : 'bg-cream-dark text-charcoal-light hover:bg-cream'
-              )}
+            <Select
+              value={item.productionState}
+              onChange={(e) => setState(e.target.value)}
+              className="w-auto"
             >
-              {item.isComplete ? '✓ Complete' : 'Mark complete'}
-            </button>
+              {PRODUCTION_STATES.map((s) => (
+                <option key={s} value={s}>
+                  {productionStateLabel(s)}
+                </option>
+              ))}
+            </Select>
           </div>
           <p className="mt-1 font-body text-sm text-charcoal">
             {item.embroideryRequest}
